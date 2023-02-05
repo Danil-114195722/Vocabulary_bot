@@ -23,11 +23,17 @@ def get_meaning(term_name):
     except Exception as error:
         pass
         print(f'Ha-ha-ha, you caught the error in project "Vocabulary_bot", in file "parser", in func "get_meaning", in request:\n\t{error}')
-        with open('/home/daniil/Documents/Python/Telegram_bots/Vocabulary_bot/bot_state', 'a') as bot_state:
+        # для локалки
+        # with open('/home/daniil/Documents/Python/Telegram_bots/Vocabulary_bot/bot_state', 'a') as bot_state:
+        # для сервака
+        with open('./bot_state', 'a') as bot_state:
             now_time = time.localtime()
 
             bot_state.write(f'Ha-ha-ha, you caught the error in project "Vocabulary_bot", in file "parser", in func "get_meaning", in request:\n\t{str(error)}')
-            bot_state.write(f' {now_time.tm_hour}.{now_time.tm_min}.{now_time.tm_sec}\n')
+            # для локалки
+            # bot_state.write(f' {now_time.tm_hour}.{now_time.tm_min}.{now_time.tm_sec}\n')
+            # для сервака
+            bot_state.write(f' {now_time.tm_hour + 3}.{now_time.tm_min}.{now_time.tm_sec}\n')
             bot_state.write('\n')
         return server_error
 
