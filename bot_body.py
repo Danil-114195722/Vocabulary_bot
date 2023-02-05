@@ -56,7 +56,7 @@ if __name__ == '__main__':
     with open('./bot_state', 'w') as bot_state:
         now_time = localtime()
 
-        bot_state.write('Start in')
+        bot_state.write('Start in\n')
         # для локалки
         # bot_state.write(f' {now_time.tm_hour}.{now_time.tm_min}.{now_time.tm_sec}\n')
         # для сервака
