@@ -7,8 +7,12 @@ from aiogram import Bot, types
 from aiogram.utils import executor
 from aiogram.dispatcher import Dispatcher
 
+import asyncio
+import aiofiles
+
 from config import TOKEN
 from parser import get_meaning
+from constants import PROJECT_PATH, TIME_ZONE
 
 bot = Bot(token=TOKEN)
 disp = Dispatcher(bot)
@@ -23,7 +27,7 @@ async def start_command(message: types.Message):
 @disp.message_handler(commands='help')
 async def help_command(message: types.Message):
     await message.answer(f'''
-    Я использую русский онлайн словарь wiktionary.org,\nи ищу толкование твоего слова\n\nВводи слово, не томи :)''')
+    Я использую русский онлайн словарь wiktionary.org,\nи ищу толкование твоего слова\n\nВводи слово :)''')
 
 
 @disp.message_handler()
@@ -31,36 +35,24 @@ async def main_command(message: types.Message):
     word = message.text.lower()
 
     try:
-        meaning = get_meaning(word)
+        meaning = await asyncio.create_task(get_meaning(word))
 
         await message.reply(meaning)
     except Exception as error:
-        # для локалки
-        # with open('/home/daniil/Documents/Python/Telegram_bots/Vocabulary_bot/bot_state', 'a') as bot_state:
-        # для сервака
-        with open('./bot_state', 'a') as bot_state:
+
+        async with aiofiles.open(f'{PROJECT_PATH}/bot_state', 'a') as bot_state:
             now_time = localtime()
 
-            bot_state.write(str(error))
-            # для локалки
-            # bot_state.write(f' {now_time.tm_hour}.{now_time.tm_min}.{now_time.tm_sec}\n')
-            # для сервака
-            bot_state.write(f' {now_time.tm_hour + 3}.{now_time.tm_min}.{now_time.tm_sec}\n')
-            bot_state.write('\n')
+            await bot_state.write(str(error))
+            await bot_state.write(f' {now_time.tm_hour + TIME_ZONE}.{now_time.tm_min}.{now_time.tm_sec}\n\n')
 
 
 if __name__ == '__main__':
-    # для локалки
-    # with open('/home/daniil/Documents/Python/Telegram_bots/Vocabulary_bot/bot_state', 'w') as bot_state:
-    # для сервака
-    with open('./bot_state', 'w') as bot_state:
+    with open(f'{PROJECT_PATH}/bot_state', 'w') as bot_state:
         now_time = localtime()
 
-        bot_state.write('Start in\n')
-        # для локалки
-        # bot_state.write(f' {now_time.tm_hour}.{now_time.tm_min}.{now_time.tm_sec}\n')
-        # для сервака
-        bot_state.write(f'Time: {now_time.tm_hour + 3}.{now_time.tm_min}.{now_time.tm_sec}\n')
-        bot_state.write(f'Date: {now_time.tm_mday}.{now_time.tm_mon}.{now_time.tm_year}\n')
+        bot_state.write('Start at\n')
+        bot_state.write(f'Time: {now_time.tm_hour + TIME_ZONE}.{now_time.tm_min}.{now_time.tm_sec}\n')
+        bot_state.write(f'Date: {now_time.tm_mday}.{now_time.tm_mon}.{now_time.tm_year}\n\n')
 
     executor.start_polling(disp)

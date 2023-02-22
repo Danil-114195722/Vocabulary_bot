@@ -1,16 +1,20 @@
 import re
 import time
 
-import requests
+import lxml
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 
+import asyncio
+import aiohttp
+import aiofiles
 
-DEFAULT_PAGE = 'https://ru.wiktionary.org/wiki/'
+from constants import TIME_ZONE, DEFAULT_PAGE, PROJECT_PATH
 
 
-def get_meaning(term_name):
+async def get_meaning(term_name):
     server_error = 'Извините, у нас небольшие проблемы с сервером, скоро мы всё починим :)'
+    user_error = 'Вы неверно ввели слово! Проверьте своё написание'
 
     user_agent = UserAgent()
     headers = {
@@ -18,23 +22,19 @@ def get_meaning(term_name):
     }
 
     try:
-        html = requests.get(DEFAULT_PAGE + term_name, headers=headers, timeout=0.5).text
-        soup = BeautifulSoup(html, 'html.parser')
+        async with aiohttp.ClientSession() as session:
+            async with session.get(DEFAULT_PAGE + term_name, headers=headers, timeout=3) as response:
+                html = await response.text()
+                soup = BeautifulSoup(html, 'lxml')
+
     except Exception as error:
-        pass
         print(f'Ha-ha-ha, you caught the error in project "Vocabulary_bot", in file "parser", in func "get_meaning", in request:\n\t{error}')
-        # для локалки
-        # with open('/home/daniil/Documents/Python/Telegram_bots/Vocabulary_bot/bot_state', 'a') as bot_state:
-        # для сервака
-        with open('./bot_state', 'a') as bot_state:
+
+        async with aiofiles.open(f'{PROJECT_PATH}/bot_state', 'a') as bot_state:
             now_time = time.localtime()
 
-            bot_state.write(f'Ha-ha-ha, you caught the error in project "Vocabulary_bot", in file "parser", in func "get_meaning", in request:\n\t{str(error)}')
-            # для локалки
-            # bot_state.write(f' {now_time.tm_hour}.{now_time.tm_min}.{now_time.tm_sec}\n')
-            # для сервака
-            bot_state.write(f' {now_time.tm_hour + 3}.{now_time.tm_min}.{now_time.tm_sec}\n')
-            bot_state.write('\n')
+            await bot_state.write(f'Ha-ha-ha, you caught the error in project "Vocabulary_bot", in file "parser", in func "get_meaning", in request:\n\t{str(error)}')
+            await bot_state.write(f' {now_time.tm_hour + TIME_ZONE}.{now_time.tm_min}.{now_time.tm_sec}\n\n')
         return server_error
 
     try:
@@ -44,14 +44,10 @@ def get_meaning(term_name):
                                 f'{i + 1}. ' + all_meaning[i][:all_meaning[i].index('◆')] + '\n\n')
                          for i in range(len(all_meaning))]
 
-        # # проверка
-        # for meaning in list_meanings:
-        #     print(meaning)
-
         return ''.join(list_meanings)
 
     except AttributeError:
-        return 'Вы неверно ввели слово! Проверьте своё написание'
+        return user_error
 
 
 # if __name__ == '__main__':
