@@ -9,6 +9,6 @@ PROJECT_PATH = '/'.join(path_list[:path_list.index('Vocabulary_bot') + 1])
 DEFAULT_PAGE = 'https://ru.wiktionary.org/wiki/'
 
 # для локалки
-TIME_ZONE = 0
+# TIME_ZONE = 0
 # для сервака
-# TIME_ZONE = 3
+TIME_ZONE = 3
